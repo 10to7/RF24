@@ -21,7 +21,9 @@
  *
  */
 
+#include <stdio.h>
 #include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include "../RF24.h"
 
@@ -38,6 +40,14 @@ RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CSN
 
 void setup(void)
 {
+	time_t now = time(0);
+	char* dt = ctime(&now);
+	cout << "The local time is: " << dt << endl;
+
+	tm * gmtm = gmtime(&now);
+	dt = asctime(gmtm);;
+	cout << "The UTC date and time is: " << dt << endl;
+	
 	//
 	// Refer to RF24.h or nRF24L01 DS for settings
 	radio.begin();
@@ -91,10 +101,15 @@ void loop(void)
 		if ( pipe != 7 ) {
 			// Send back using the same pipe
 			// radio.openWritingPipe(pipes[pipe]);
-			radio.write(receivePayload,len);
+			time_t now = time(0);
+			tm * gmtm = gmtime(&now);		
+			char * dt = asctime(gmtm);	
+			//sprintf(dt, "%d", time_t);
+			strftime(dt, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
+			radio.write(dt,strlen(dt));
 
 			receivePayload[len]=0;
-			printf("\t Send: size=%i payload=%s pipe:%i\n\r",len,receivePayload,pipe);
+			printf("\t Send: size=%i payload=%s pipe:%i\n\r",strlen(dt),dt,pipe);
   		} else {
 			printf("\n\r");
                 }
